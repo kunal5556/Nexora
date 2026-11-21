@@ -5,7 +5,7 @@ import MessageBubble from "./MessageBubble";
 const EXAMPLE_PROMPTS = [
   "What is the capital of France?",
   "Explain response caching in one sentence.",
-  "Give me three tips for a technical interview.",
+  "What does an API key do? Answer in two sentences.",
 ];
 
 function MessageList({ messages, isSending, onPickExample }) {
