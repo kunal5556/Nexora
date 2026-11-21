@@ -62,8 +62,16 @@ def read_token_usage(response, messages, reply):
     return int(input_tokens), int(output_tokens)
 
 
+def read_reply(response):
+    choices = getattr(response, "choices", None) or []
+    if not choices:
+        return ""
+    return (choices[0].message.content or "").strip()
+
+
 def ask_llm(messages, simulated_failures):
     failed_attempts = 0
+    skip_cache_read = bool(simulated_failures)
     for index, api_key in enumerate(settings.llm_api_keys):
         key_id = f"key_{index + 1}"
         request_args = {
@@ -73,7 +81,7 @@ def ask_llm(messages, simulated_failures):
             "num_retries": 0,
             "timeout": settings.llm_timeout_seconds,
         }
-        if simulated_failures:
+        if skip_cache_read:
             request_args["cache"] = {"no-cache": True}
         if key_id in simulated_failures:
             request_args["mock_response"] = build_simulated_error(simulated_failures[key_id], key_id)
@@ -85,9 +93,10 @@ def ask_llm(messages, simulated_failures):
             logger.warning("%s failed with status %s, trying next key", key_id, getattr(error, "status_code", "unknown"))
             continue
 
-        reply = (response.choices[0].message.content or "").strip()
+        reply = read_reply(response)
         if not reply:
             failed_attempts += 1
+            skip_cache_read = True
             logger.warning("%s returned an empty reply, trying next key", key_id)
             continue
 

@@ -14,7 +14,7 @@ Browser (React) ──JSON──▶ FastAPI routes ──▶ chat_service ──
 ```
 backend/
   app/            config, database, schemas, chat_service, llm_gateway, failure_simulation, routes, main
-  tests/          pytest suite (69 tests)
+  tests/          pytest suite (71 tests)
   scripts/        smoke_test.py – end-to-end contract check against a running backend
 frontend/
   src/            App.jsx, api.js, components/ (header, settings, message list, bubbles, metadata, input)
@@ -108,7 +108,7 @@ python -m ruff check --select F .
 
 - Every key in the pool uses the same model (`LLM_MODEL`), so an answer cached through one key is valid for all of them.
 - `llm_gateway.ask_llm()` tries the keys **in order**: `key_1`, then `key_2`, and so on. Each attempt is one `litellm.completion()` call with that key, `num_retries=0` and a timeout, so a failing key is given up on quickly instead of being retried.
-- LiteLLM turns provider errors into typed exceptions that carry a `status_code`: `RateLimitError` (429, which is also how Gemini reports an exhausted quota), `InternalServerError` (500), `BadGatewayError` (502), `ServiceUnavailableError` (503), `AuthenticationError` (401), timeouts and so on. Any exception, or an empty reply, counts as a failed attempt and the loop moves on to the next key. That covers the required 429 / quota / 5xx cases and also revoked or invalid keys.
+- LiteLLM turns provider errors into typed exceptions that carry a `status_code`: `RateLimitError` (429, which is also how Gemini reports an exhausted quota), `InternalServerError` (500), `BadGatewayError` (502), `ServiceUnavailableError` (503), `AuthenticationError` (401), timeouts and so on. Any exception, or an empty reply, counts as a failed attempt and the loop moves on to the next key. That covers the required 429 / quota / 5xx cases and also revoked or invalid keys. After an empty reply the next key skips the cache read, because LiteLLM would otherwise hand back the same cached empty answer; the good answer then replaces it in the cache.
 - `key_id` is the id of the key that answered and `fallback_attempts` is how many keys failed before it. The key itself is never returned, stored or logged; the log only says things like `key_1 failed with status 429, trying next key`.
 - If every key fails, the gateway raises `AllProvidersUnavailableError`, and a FastAPI exception handler turns it into `503 {"detail": "all providers unavailable"}`. Nothing is saved, because the database write only happens after a successful reply.
 - LiteLLM's `Router` was considered, but the test hook needs "fail exactly these keys with exactly these status codes, for this one request", and the response has to say exactly which key answered and how many failed first. The Router chooses deployments itself, keeps cooldowns between requests and doesn't report attempts, which makes that hard to control. A short loop over `litellm.completion()` keeps LiteLLM in charge of the provider calls, error mapping and caching, while the order stays predictable and easy to follow.
@@ -198,7 +198,7 @@ curl -s $BASE/sessions/demo-cache-a/messages
 
 ### Automated tests and smoke test
 
-- `cd backend && python -m pytest` runs 69 tests covering validation, caching, history, multi-turn context, failover, the simulation header, CORS and the error format. They use LiteLLM's own `mock_response`, so no API keys or network are needed, while LiteLLM's real cache and error handling still run.
+- `cd backend && python -m pytest` runs 71 tests covering validation, caching, history, multi-turn context, failover, the simulation header, CORS and the error format. They use LiteLLM's own `mock_response`, so no API keys or network are needed, while LiteLLM's real cache and error handling still run.
 - `python backend/scripts/smoke_test.py <backend-url>` runs 28 end-to-end checks against a running backend with real keys: health, live vs cache, identical cached reply, faster cache hit, memory across turns, history format, 404, 422 cases, failover with `key_1=429` and `key_1=500`, and `*=429` returning 503 with nothing stored. For example: `python backend/scripts/smoke_test.py http://localhost:8000`.
 
 ## 5. Setup Used

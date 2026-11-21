@@ -1,9 +1,12 @@
 const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || "http://localhost:8000").replace(/\/$/, "");
 
+export const NETWORK_ERROR_MESSAGE = "Could not reach the server. Please check your connection and try again.";
+
 function readValidationMessage(data) {
   const detail = data?.detail;
-  if (Array.isArray(detail) && detail.length > 0) {
-    return detail[0].msg.replace(/^Value error, /, "");
+  const firstProblem = Array.isArray(detail) ? detail[0]?.msg : null;
+  if (firstProblem) {
+    return firstProblem.replace(/^Value error, /, "");
   }
   if (typeof detail === "string") {
     return detail;
@@ -49,11 +52,11 @@ export async function sendChatMessage({ sessionId, message, systemPrompt, simula
       body: JSON.stringify(body),
     });
   } catch {
-    throw new Error("Could not reach the server. Please check your connection and try again.");
+    throw new Error(NETWORK_ERROR_MESSAGE);
   }
 
   const data = await response.json().catch(() => null);
-  if (!response.ok) {
+  if (!response.ok || !data) {
     throw new Error(getErrorMessage(response.status, data));
   }
   return data;

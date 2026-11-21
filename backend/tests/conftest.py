@@ -25,7 +25,7 @@ def pytest_configure(config):
 
 @pytest.fixture
 def fake_llm(monkeypatch):
-    state = {"calls": [], "failing_keys": {}}
+    state = {"calls": [], "failing_keys": {}, "empty_keys": set()}
     real_completion = litellm.completion
 
     def fake_completion(**kwargs):
@@ -33,6 +33,8 @@ def fake_llm(monkeypatch):
         failing_status = state["failing_keys"].get(kwargs["api_key"])
         if failing_status and "mock_response" not in kwargs:
             kwargs["mock_response"] = build_simulated_error(failing_status, "test")
+        if kwargs["api_key"] in state["empty_keys"]:
+            kwargs.setdefault("mock_response", " ")
         kwargs.setdefault("mock_response", "Reply to: " + kwargs["messages"][-1]["content"])
         return real_completion(**kwargs)
 

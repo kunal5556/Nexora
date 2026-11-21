@@ -1,6 +1,8 @@
+from types import SimpleNamespace
+
 import pytest
 
-from app.llm_gateway import AllProvidersUnavailableError, ask_llm
+from app.llm_gateway import AllProvidersUnavailableError, ask_llm, read_reply
 
 
 def build_messages(text):
@@ -66,6 +68,27 @@ def test_simulated_failure_skips_cache_and_uses_next_key(fake_llm):
     assert result.from_cache is False
     assert result.key_id == "key_2"
     assert result.fallback_attempts == 1
+
+
+def test_empty_reply_falls_over_without_reading_the_cache(fake_llm):
+    fake_llm["empty_keys"] = {"test-key-one"}
+
+    result = ask_llm(build_messages("Hello"), {})
+
+    assert result.key_id == "key_2"
+    assert result.fallback_attempts == 1
+    assert result.reply == "Reply to: Hello"
+    assert fake_llm["calls"][1]["cache"] == {"no-cache": True}
+
+    fake_llm["empty_keys"] = set()
+    cached_result = ask_llm(build_messages("Hello"), {})
+
+    assert cached_result.from_cache is True
+    assert cached_result.reply == "Reply to: Hello"
+
+
+def test_reply_without_choices_is_treated_as_empty():
+    assert read_reply(SimpleNamespace(choices=[])) == ""
 
 
 def test_keys_are_tried_in_order_without_retries(fake_llm):

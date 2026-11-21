@@ -18,7 +18,7 @@ function MessageList({ messages, isSending, onPickExample }) {
   return (
     <section
       aria-live="polite"
-      className="min-h-0 flex-1 overflow-y-auto rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5"
+      className="min-h-0 flex-1 overflow-y-auto rounded-2xl border border-slate-200 bg-white p-3 shadow-sm sm:p-5"
     >
       {messages.length === 0 ? (
         <div className="flex min-h-full flex-col items-center justify-center py-4 text-center">

@@ -1,6 +1,6 @@
 const MAX_MESSAGE_LENGTH = 4000;
 
-function ChatInput({ value, onChange, onSend, isSending }) {
+function ChatInput({ inputRef, value, onChange, onSend, isSending }) {
   const characterCount = value.trim().length;
   const isTooLong = characterCount > MAX_MESSAGE_LENGTH;
 
@@ -15,6 +15,7 @@ function ChatInput({ value, onChange, onSend, isSending }) {
     <div>
       <div className="flex items-end gap-2 rounded-2xl border border-slate-300 bg-white p-2 shadow-sm focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-100">
         <textarea
+          ref={inputRef}
           data-testid="chat-input"
           aria-label="Message"
           rows={2}
@@ -34,7 +35,7 @@ function ChatInput({ value, onChange, onSend, isSending }) {
           Send
         </button>
       </div>
-      <div className="mt-1.5 flex justify-between gap-3 px-1 text-xs text-slate-400">
+      <div className="mt-1.5 flex justify-between gap-3 px-1 text-xs text-slate-500">
         <span>Enter to send, Shift+Enter for a new line</span>
         <span className={isTooLong ? "font-medium text-red-600" : ""}>
           {characterCount} / {MAX_MESSAGE_LENGTH}
