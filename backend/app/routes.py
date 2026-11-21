@@ -1,9 +1,11 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 from fastapi.responses import JSONResponse
 
 from app import database
+from app.chat_service import get_chat_history, handle_chat_request
 from app.config import settings
 from app.llm_gateway import is_cache_enabled
+from app.schemas import ChatRequest
 
 router = APIRouter()
 
@@ -19,3 +21,16 @@ def health():
         "model": settings.llm_model,
         "failure_simulation_enabled": settings.enable_failure_simulation,
     }
+
+
+@router.post("/chat")
+def chat(chat_request: ChatRequest):
+    return handle_chat_request(chat_request)
+
+
+@router.get("/sessions/{session_id}/messages")
+def session_messages(session_id: str):
+    history = get_chat_history(session_id)
+    if not history:
+        raise HTTPException(status_code=404, detail="session not found")
+    return {"session_id": session_id, "messages": history}

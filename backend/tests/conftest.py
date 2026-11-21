@@ -42,3 +42,12 @@ def client(tmp_path, monkeypatch, fake_llm):
     monkeypatch.setattr(settings, "database_path", str(tmp_path / "test.db"))
     with TestClient(app) as test_client:
         yield test_client
+
+
+@pytest.fixture
+def send_message(client):
+    def send(session_id, message, **extra_fields):
+        body = {"session_id": session_id, "message": message, **extra_fields}
+        return client.post("/chat", json=body)
+
+    return send
