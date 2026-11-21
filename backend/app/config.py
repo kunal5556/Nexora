@@ -46,7 +46,7 @@ def load_settings():
         raise RuntimeError("LLM_API_KEYS must contain at least 2 comma-separated keys")
     return Settings(
         llm_api_keys=api_keys,
-        llm_model=os.getenv("LLM_MODEL", "gemini/gemini-2.5-flash-lite").strip(),
+        llm_model=os.getenv("LLM_MODEL", "gemini/gemini-3.5-flash-lite").strip(),
         database_path=database_path_from_url(os.getenv("DATABASE_URL", "sqlite:///./data/app.db").strip()),
         allowed_origins=[origin.rstrip("/") for origin in read_list("ALLOWED_ORIGINS", "http://localhost:3000")],
         enable_failure_simulation=read_bool("ENABLE_FAILURE_SIMULATION"),

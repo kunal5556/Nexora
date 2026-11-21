@@ -19,8 +19,14 @@ def test_health_returns_ok_with_key_count(client):
     body = response.json()
     assert body["status"] == "ok"
     assert body["keys_configured"] == 2
-    assert body["model"] == "gemini/gemini-2.5-flash-lite"
+    assert body["model"] == "gemini/gemini-3.5-flash-lite"
     assert body["failure_simulation_enabled"] is True
+
+
+def test_health_reports_cache_enabled(client):
+    response = client.get("/health")
+
+    assert response.json()["cache_enabled"] is True
 
 
 def test_health_returns_503_when_database_is_unreachable(client, monkeypatch):

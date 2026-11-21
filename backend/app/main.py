@@ -7,6 +7,7 @@ from fastapi.responses import JSONResponse
 
 from app.config import settings
 from app.database import init_db
+from app.llm_gateway import AllProvidersUnavailableError, setup_llm_cache
 from app.routes import router
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
@@ -16,6 +17,7 @@ logger = logging.getLogger(__name__)
 @asynccontextmanager
 async def lifespan(application):
     init_db()
+    setup_llm_cache()
     logger.info("Loaded %d API keys for model %s", len(settings.llm_api_keys), settings.llm_model)
     yield
 
@@ -30,6 +32,11 @@ app.add_middleware(
 )
 
 app.include_router(router)
+
+
+@app.exception_handler(AllProvidersUnavailableError)
+async def handle_all_providers_unavailable(request, error):
+    return JSONResponse(status_code=503, content={"detail": "all providers unavailable"})
 
 
 @app.exception_handler(Exception)
