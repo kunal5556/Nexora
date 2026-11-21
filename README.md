@@ -25,9 +25,10 @@ docker-compose.yml, Makefile, .env.example
 
 | | URL |
 |---|---|
-| Frontend | _added after deployment_ |
-| Backend | _added after deployment_ |
-| Health check | _added after deployment_ |
+| Frontend (Vercel) | https://nexora-llm-chatbot.vercel.app |
+| Backend (Render) | https://nexora-backend-owc8.onrender.com |
+| Health check | https://nexora-backend-owc8.onrender.com/health |
+| Repository | https://github.com/kunal5556/Nexora |
 
 The backend runs on Render's free plan, which goes to sleep after about 15 minutes without traffic. The first request after that can take up to a minute while it wakes up; after that it responds normally.
 
