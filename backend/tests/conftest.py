@@ -19,6 +19,10 @@ from app.llm_gateway import build_simulated_error, setup_llm_cache
 from app.main import app
 
 
+def pytest_configure(config):
+    config.addinivalue_line("filterwarnings", "ignore:Pydantic serializer warnings")
+
+
 @pytest.fixture
 def fake_llm(monkeypatch):
     state = {"calls": [], "failing_keys": {}}
@@ -46,8 +50,8 @@ def client(tmp_path, monkeypatch, fake_llm):
 
 @pytest.fixture
 def send_message(client):
-    def send(session_id, message, **extra_fields):
+    def send(session_id, message, headers=None, **extra_fields):
         body = {"session_id": session_id, "message": message, **extra_fields}
-        return client.post("/chat", json=body)
+        return client.post("/chat", json=body, headers=headers)
 
     return send

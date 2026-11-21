@@ -3,6 +3,7 @@ import time
 
 from app import database
 from app.config import settings
+from app.failure_simulation import parse_simulation_header
 from app.llm_gateway import ask_llm
 
 
@@ -20,13 +21,17 @@ def build_llm_messages(system_prompt, history_rows, user_message):
     return messages
 
 
-def handle_chat_request(chat_request):
+def handle_chat_request(chat_request, simulation_header):
     started_at = time.perf_counter()
     system_prompt = choose_system_prompt(chat_request.session_id, chat_request.system_prompt)
     history_rows = database.get_session_messages(chat_request.session_id)
     llm_messages = build_llm_messages(system_prompt, history_rows, chat_request.message)
 
-    result = ask_llm(llm_messages, {})
+    simulated_failures = {}
+    if settings.enable_failure_simulation:
+        simulated_failures = parse_simulation_header(simulation_header, settings.key_ids)
+
+    result = ask_llm(llm_messages, simulated_failures)
     metadata = {
         "resolution_source": "LLM_CACHE" if result.from_cache else "LIVE_INFERENCE",
         "model": settings.llm_model,

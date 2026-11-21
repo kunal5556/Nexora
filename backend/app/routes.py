@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Header, HTTPException
 from fastapi.responses import JSONResponse
 
 from app import database
@@ -24,8 +24,8 @@ def health():
 
 
 @router.post("/chat")
-def chat(chat_request: ChatRequest):
-    return handle_chat_request(chat_request)
+def chat(chat_request: ChatRequest, x_simulate_failure: str | None = Header(default=None)):
+    return handle_chat_request(chat_request, x_simulate_failure)
 
 
 @router.get("/sessions/{session_id}/messages")
