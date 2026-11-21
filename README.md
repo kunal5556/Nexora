@@ -212,6 +212,7 @@ curl -s $BASE/sessions/demo-cache-a/messages
 - **Failure simulator in the UI** – a dropdown that sends `X-Simulate-Failure` with the next message, so failover can be shown from the browser without curl.
 - **Key and fallback info on every reply** – besides the required metadata, each reply shows which key answered and how many keys failed first, which makes failover visible at a glance.
 - **New chat button** – starts a fresh session without reloading the page.
+- **Small UI helpers** – a backend status indicator (it also wakes the Render backend as soon as the page opens), example prompts on the empty screen, and a character counter that turns red above the 4000-character limit.
 - **System prompt kept per session** – the prompt is stored in the `sessions` table and the field locks after the first reply, so a conversation can't silently switch prompts halfway through.
 - **Smoke test script** – `backend/scripts/smoke_test.py` checks the whole API contract against any running backend, local or live, with one command.
 - **Docker health check and non-root user** – the frontend container starts only after the backend reports healthy, and the backend container doesn't run as root.

@@ -1,5 +1,5 @@
-import { useRef, useState } from "react";
-import { sendChatMessage } from "./api";
+import { useEffect, useRef, useState } from "react";
+import { checkBackendHealth, sendChatMessage } from "./api";
 import ChatHeader from "./components/ChatHeader";
 import ChatInput from "./components/ChatInput";
 import MessageList from "./components/MessageList";
@@ -13,9 +13,14 @@ function App() {
   const [systemPrompt, setSystemPrompt] = useState("");
   const [simulateFailure, setSimulateFailure] = useState("");
   const [isSending, setIsSending] = useState(false);
+  const [backendStatus, setBackendStatus] = useState("connecting");
   const nextMessageId = useRef(1);
 
   const hasAssistantReply = messages.some((message) => message.role === "assistant");
+
+  useEffect(() => {
+    checkBackendHealth().then((isOnline) => setBackendStatus(isOnline ? "online" : "offline"));
+  }, []);
 
   function addMessage(message) {
     const id = nextMessageId.current;
@@ -41,6 +46,7 @@ function App() {
         simulateFailure: failureToSimulate,
       });
       addMessage({ role: "assistant", content: data.reply, metadata: data.metadata });
+      setBackendStatus("online");
     } catch (error) {
       addMessage({ role: "error", content: error.message });
     } finally {
@@ -56,16 +62,17 @@ function App() {
 
   return (
     <div className="min-h-screen bg-slate-100 text-slate-800">
-      <div className="mx-auto flex h-dvh max-w-3xl flex-col gap-4 p-4">
-        <ChatHeader sessionId={sessionId} onNewChat={handleNewChat} isSending={isSending} />
+      <div className="mx-auto flex h-dvh max-w-3xl flex-col gap-4 px-4 py-5">
+        <ChatHeader backendStatus={backendStatus} onNewChat={handleNewChat} isSending={isSending} />
         <SessionSettings
+          sessionId={sessionId}
           systemPrompt={systemPrompt}
           onSystemPromptChange={setSystemPrompt}
           isLocked={hasAssistantReply}
           simulateFailure={simulateFailure}
           onSimulateFailureChange={setSimulateFailure}
         />
-        <MessageList messages={messages} isSending={isSending} />
+        <MessageList messages={messages} isSending={isSending} onPickExample={setInput} />
         <ChatInput value={input} onChange={setInput} onSend={handleSend} isSending={isSending} />
       </div>
     </div>
