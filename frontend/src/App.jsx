@@ -7,12 +7,15 @@ import SessionSettings from "./components/SessionSettings";
 import { createSessionId } from "./utils/session";
 
 function App() {
-  const [sessionId] = useState(createSessionId);
+  const [sessionId, setSessionId] = useState(createSessionId);
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [systemPrompt, setSystemPrompt] = useState("");
+  const [simulateFailure, setSimulateFailure] = useState("");
   const [isSending, setIsSending] = useState(false);
   const nextMessageId = useRef(1);
+
+  const hasAssistantReply = messages.some((message) => message.role === "assistant");
 
   function addMessage(message) {
     const id = nextMessageId.current;
@@ -25,11 +28,18 @@ function App() {
       return;
     }
     const messageText = input;
+    const failureToSimulate = simulateFailure;
     setInput("");
+    setSimulateFailure("");
     addMessage({ role: "user", content: messageText });
     setIsSending(true);
     try {
-      const data = await sendChatMessage({ sessionId, message: messageText, systemPrompt });
+      const data = await sendChatMessage({
+        sessionId,
+        message: messageText,
+        systemPrompt,
+        simulateFailure: failureToSimulate,
+      });
       addMessage({ role: "assistant", content: data.reply, metadata: data.metadata });
     } catch (error) {
       addMessage({ role: "error", content: error.message });
@@ -38,12 +48,24 @@ function App() {
     }
   }
 
+  function handleNewChat() {
+    setSessionId(createSessionId());
+    setMessages([]);
+    setInput("");
+  }
+
   return (
     <div className="min-h-screen bg-slate-100 text-slate-800">
       <div className="mx-auto flex h-dvh max-w-3xl flex-col gap-4 p-4">
-        <ChatHeader sessionId={sessionId} />
-        <SessionSettings systemPrompt={systemPrompt} onSystemPromptChange={setSystemPrompt} />
-        <MessageList messages={messages} />
+        <ChatHeader sessionId={sessionId} onNewChat={handleNewChat} isSending={isSending} />
+        <SessionSettings
+          systemPrompt={systemPrompt}
+          onSystemPromptChange={setSystemPrompt}
+          isLocked={hasAssistantReply}
+          simulateFailure={simulateFailure}
+          onSimulateFailureChange={setSimulateFailure}
+        />
+        <MessageList messages={messages} isSending={isSending} />
         <ChatInput value={input} onChange={setInput} onSend={handleSend} isSending={isSending} />
       </div>
     </div>

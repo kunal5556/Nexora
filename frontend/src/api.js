@@ -21,17 +21,22 @@ function getErrorMessage(status, data) {
   return "Something went wrong on the server. Please try again.";
 }
 
-export async function sendChatMessage({ sessionId, message, systemPrompt }) {
+export async function sendChatMessage({ sessionId, message, systemPrompt, simulateFailure }) {
   const body = { session_id: sessionId, message };
   if (systemPrompt.trim()) {
     body.system_prompt = systemPrompt.trim();
+  }
+
+  const headers = { "Content-Type": "application/json" };
+  if (simulateFailure) {
+    headers["X-Simulate-Failure"] = simulateFailure;
   }
 
   let response;
   try {
     response = await fetch(`${API_BASE_URL}/chat`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers,
       body: JSON.stringify(body),
     });
   } catch {
